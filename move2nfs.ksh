@@ -14,6 +14,9 @@
 #################################################################################
 # Wei           v1.0    16 Dec 2014        Creation
 # Wei           v1.1    18 Dec 2014        Change in/ & aud/ to stg/ method
+# Wei           v1.2    16 Jan 2015        Add -p and -s parameter
+#                                          to support primary and standby DFS
+#                                          Like DDO DFS and RPM DFS
 #
 ################################################################################
 
@@ -30,7 +33,7 @@ fn_log_warn()  { echo "$(date '+%D %T'): [WARNING] $1"  | tee -a ${LOGFILE}; }
 fn_log_error() { echo "$(date '+%D %T'): [ERROR] $1"  | tee -a ${LOGFILE}; }
 
 fn_usage () {
-        print "ERROR! Usage: ${0##*/} [CDA InstID] [File Out directory]"
+        print "ERROR! Usage: ${0##*/} [CDA InstID] [File Out directory] [-p|-s]"
 }
 # -----------------------------------------------------------------------------
 # Small utility functions for reducing code duplication
@@ -59,15 +62,24 @@ OUTFILE=$PP/$PN.txt
 
 #
 
-if [ $# -ne 2 ]; then
+if [ $# -ne 3 ]; then
         fn_log_error "Wrong parameter with $PN "
         fn_usage
         exit 1
 else
         INSTID=$1
         OUTDIR=$2
+        PS_FLAG=$3
         CDASTG_DIR=$SENDDIR/$INSTID/stg
-        CDAOUT_DIR=$SENDDIR/$INSTID/out
+        if [ "$PS_FLAG" == "-p" ]; then
+                CDAOUT_DIR=$SENDDIR/$INSTID/out
+        elif [ "$PS_FLAG" == "-s" ]; then
+                CDAOUT_DIR=$SENDDIR/$INSTID/sout
+        else
+                fn_log_error "The parameter would be -p or -s"
+                fn_usage
+                exit 1
+        fi
 
         if [ ! -d $OUTDIR ]; then
                 fn_log_error "$OUTDIR not found. exit"
@@ -98,4 +110,3 @@ fi
 
 [ -f $LOGFILE ] && fn_log_rotate $LOGFILE
 exit 0
-
